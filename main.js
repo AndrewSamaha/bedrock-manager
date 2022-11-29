@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs-extra');
 const assert = require("assert");
 const {
@@ -310,9 +311,6 @@ downloadServerIfNotExists(platform)
             await restoreLatestLocalBackup();
 
             console.log("\nStarting Minecraft Bedrock server...\n");
-            console.log(
-                `!!!!!!!!!!\nWARNING: Use the 'stop' command to stop the server gracefully, or you may lose non backed up up data\n!!!!!!!!!!\n`
-            );
 
             const spawnServer = () => {
                 bs = spawn("./bedrock_server", [], {
@@ -409,11 +407,12 @@ downloadServerIfNotExists(platform)
                     bs.stdin.write("save hold\r\n");
                 }
             };
-            const saveHoldInterval = setInterval(
+
+            const saveHoldInterval = process.env.SCHEDULE_BACKUPS === 'true' ? setInterval(
                 triggerBackup,
                 backupFrequencyMS,
                 BACKUP_TYPES.SCHEDULED
-            );
+            ) : null;
 
             const printResourceUsage = () => {
                 if (bs != null) {
