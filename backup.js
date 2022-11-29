@@ -42,7 +42,7 @@ if (backupConfig["use-aws-s3-backup"]) {
     apiVersion: '2006-03-01'
   });
 } else {
-  console.log(`!!!!!!!!!!\nconfig["backup"]["use-aws-s3-backup"] set to false - if you want to use AWS S3 backups, set this to true and see https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/loading-node-credentials-shared.html for instruction on how to define your AWS credentials\n!!!!!!!!!!\n`);
+  console.log(`config["backup"]["use-aws-s3-backup"] set to false - s3 backups disabled`);
 }
 
 async function createBackupBucketIfNotExists() {
@@ -127,19 +127,19 @@ function getFilePathsSync(dir, files_) {
 async function createUnscheduledBackup(backupStartTime) {
   // blindly tries to create a backup of everything in the current worlds folder
   // without the file and position list provided by 'save query'
-  console.log('!!!!!!!!!!!\n\nRUNNING BACKUP DUE TO A FORCED STOP - creating a sketchy ad hoc backup of server state...');
+  console.log('ATTENTION: RUNNING BACKUP DUE TO A FORCED STOP - creating a sketchy ad hoc backup of server state...');
   const filePaths = getFilePathsSync(SERVER_WORLDS_FOLDER_PATH).map(filePath => filePath.replace(`${SERVER_WORLDS_FOLDER_PATH}/`, ''));
   const fileToCopyLength = {};
   filePaths.forEach(path => {
     fileToCopyLength[path] = Infinity;
   });
   await _createBackupFromFileToCopyLength(fileToCopyLength, backupStartTime, BACKUP_TYPES.ON_FORCED_STOP);
-  console.log(`\nPlease check the state of the server and make sure the latest backup is a valid one before continued use (use force-restore <BACKUP_FILE_NAME> if necessary)`);
-  console.log(`\nIn the future, please use the 'stop' command to kill the server`);
+  console.log(`Please check the state of the server and make sure the latest backup is a valid one before continued use (use force-restore <BACKUP_FILE_NAME> if necessary)`);
+  console.log(`In the future, please use the 'stop' command to kill the server`);
 }
 
 async function restoreLatestLocalBackup() {
-  console.log('\nRestoring latest local backup...');
+  console.log('Restoring latest local backup...');
   fs.ensureDirSync(BACKUP_FOLDER_PATH);
   const backupFiles = await fs.readdir(BACKUP_FOLDER_PATH);
   const allArchives = await fs.readdir(BACKUP_FOLDER_PATH);

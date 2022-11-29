@@ -29,7 +29,6 @@ const createServerProperties = util.promisify((callback) => {
 
   const content = getServerPropertiesContentString(configServerProperties);
 
-  console.log(SERVER_PROPERTIES_FILE_PATH)
   fs.writeFileSync(SERVER_PROPERTIES_FILE_PATH, content);
 
   console.log(`Overwrote ${SERVER_PROPERTIES_FILE_PATH} based on contents of ${CONFIG_FILE_PATH}`);
