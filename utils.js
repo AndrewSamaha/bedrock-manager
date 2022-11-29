@@ -1,14 +1,15 @@
 const os = require('os');
+require('dotenv').config()
 
 const CONFIG_FILE_PATH = './config.json'
 const cjson = require(CONFIG_FILE_PATH);
 
 
-const UNZIPPED_SERVER_FOLDER_NAME = `bedrock-server-${cjson['minecraft-server-version']}`;
+const UNZIPPED_SERVER_FOLDER_NAME = `bedrock-server`;
 const UNZIPPED_SERVERS_CONTAINER = './servers'
-const UNZIPPED_SERVER_FOLDER_PATH = `${UNZIPPED_SERVERS_CONTAINER}/${UNZIPPED_SERVER_FOLDER_NAME}`;
+const UNZIPPED_SERVER_FOLDER_PATH = process.env.SERVER_EXECUTABLE_PATH;
 const ZIPPED_SERVER_PATH = `${UNZIPPED_SERVER_FOLDER_PATH}.zip`;
-const SERVER_EXECUTABLE_PATH = `${UNZIPPED_SERVER_FOLDER_PATH}/bedrock_server`;
+const SERVER_EXECUTABLE_PATH = `${process.env.SERVER_EXECUTABLE_PATH}/bedrock_server`;
 const WINDOWS_SERVER_LINK = `https://minecraft.azureedge.net/bin-win/${UNZIPPED_SERVER_FOLDER_NAME}.zip`;
 const LINUX_SERVER_LINK = `https://minecraft.azureedge.net/bin-linux/${UNZIPPED_SERVER_FOLDER_NAME}.zip`;
 const BACKUP_FOLDER_NAME = 'backups'

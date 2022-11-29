@@ -18,11 +18,11 @@
     "url": "https://github.com/debkbanerji/minecraft-bedrock-server/issues"
   },
   "homepage": "https://github.com/debkbanerji/minecraft-bedrock-server#readme",
-  "devDependencies": {},
   "dependencies": {
     "archiver": "^3.1.1",
     "aws-sdk": "^2.656.0",
     "cross-spawn": "^7.0.2",
+    "dotenv": "^16.0.3",
     "express": "^4.16.3",
     "fs-extra": "^9.0.0",
     "pidusage": "^2.0.21",
