@@ -10,7 +10,6 @@ const pipeline = util.promisify(stream.pipeline);
 
 
 const {
-  CONFIG_FILE_PATH,
   SERVER_WORLDS_FOLDER_NAME,
   SERVER_WORLDS_FOLDER_PATH,
   BACKUP_FOLDER_PATH,
@@ -22,10 +21,8 @@ const {
   platform
 } = require('./utils.js');
 
-
-const configFile = fs.readFileSync(CONFIG_FILE_PATH, 'utf8');
-const config = JSON.parse(configFile);
-const backupConfig = config.backup;
+const config = require('./config.js');
+const { backup: backupConfig } = config;
 assert(backupConfig, `Could not find field 'backup' at root of config`);
 // too lazy for more error handling :/
 const localBackupKeepCount = backupConfig["num-backups-to-keep-for-type"].local;

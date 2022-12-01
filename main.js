@@ -1,18 +1,14 @@
 require('dotenv').config();
 const fs = require('fs-extra');
 const assert = require("assert");
-const {
-    Readable,
-    Writable
-} = require("stream");
+const { Readable, Writable } = require("stream");
 const readline = require("readline");
-let {
-    spawn
-} = require("child_process");
+let { spawn, exec } = require("child_process");
 const pidusage = require("pidusage");
 const express = require("express");
+const crypto = require("crypto");
+
 const {
-    CONFIG_FILE_PATH,
     UNZIPPED_SERVERS_CONTAINER,
     UNZIPPED_SERVER_FOLDER_PATH,
     BACKUP_TYPES,
@@ -27,9 +23,8 @@ if (platform === "win32") {
     spawn = require("cross-spawn");
 }
 
-const {
-    createServerProperties
-} = require("./create-server-properties.js");
+const { createServerProperties } = require("./create-server-properties.js");
+
 const {
     createBackupBucketIfNotExists,
     downloadRemoteBackups,
@@ -43,17 +38,16 @@ const {
     createLockFileIfS3Enabled,
     deleteLockFileIfExists,
 } = require("./backup.js");
-const crypto = require("crypto");
-const { env } = require('process');
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     terminal: false
 });
-const configFile = fs.readFileSync(CONFIG_FILE_PATH, "utf8");
+
 fs.ensureDirSync(UNZIPPED_SERVERS_CONTAINER);
-const config = JSON.parse(configFile);
+
+const config = require('./config.js');
 
 const backupConfig = config.backup;
 assert(backupConfig, `Could not find field 'backup' at root of config`);
@@ -278,7 +272,7 @@ if ((uiConfig || {}).enabled) {
         const backups = await getBackupSizeList();
         res.send(backups);
     });
-
+    
     expressApp.use("/", router);
     expressApp.use(express.static("static"));
     expressApp.listen(uiConfig.port);
@@ -304,7 +298,7 @@ createServerProperties().then(async () => {
     await downloadRemoteBackups();
     if (process.env.RESTORE_BACKUP_ON_STARTUP === 'true') await restoreLatestLocalBackup();
 
-    console.log("Starting Minecraft Bedrock server...");
+    console.log(`Starting Minecraft Bedrock server in ${process.env.ENVIRONMENT} mode...`);
 
     const spawnServer = () => {
         bs = spawn("./bedrock_server", [], {
