@@ -105,7 +105,7 @@ let salt = crypto
 const uiConfig = config.ui;
 if ((uiConfig || {}).enabled) {
     console.log("Starting express server");
-    console.log("hash", uiConfig["admin-code-sha256-hash"].toUpperCase())
+    
     function clientHashIsValid(clientHashWithSalt) {
         return (
             (clientHashWithSalt || "").toUpperCase() ===
@@ -272,58 +272,6 @@ if ((uiConfig || {}).enabled) {
         const backups = await getBackupSizeList();
         res.send(backups);
     });
-
-    router.get("/list-available-mods", async (req, res) => {
-        /*  
-            Here's another pattern to consider here
-    
-            function getFilePathsSync(dir, files_) {
-            files_ = files_ || [];
-            const files = fs.readdirSync(dir);
-            for (var i in files) {
-                const name = dir + '/' + files[i];
-                if (fs.statSync(name).isDirectory()) {
-                getFilePathsSync(name, files_);
-                } else {
-                files_.push(name);
-                }
-            }
-            return files_;
-            }
-        */
-        const bpPath = `${process.env.MOD_IMPORT_PATH}/development_behavior_packs`;
-        const rpPath = `${process.env.MOD_IMPORT_PATH}/development_resource_packs`;
-        
-        const behaviorPacks = fs.readdirSync(bpPath);
-        const resourcePacks = fs.readdirSync(rpPath);
-        let ret = 'Behavior Packs: <br />\r\n';
-        ret = behaviorPacks.reduce((acc, cur) => {
-                return `${acc}${cur}<br />\r\n`
-        }, ret);
-        ret += '<br />Resource Packs: <br />\r\n';
-        ret = resourcePacks.reduce((acc, cur) => {
-            return `${acc}${cur}<br />\r\n`
-        }, ret);
-        console.log(ret)
-        res.send(ret)
-        return;
-    
-        // exec(`(cd ${process.env.SERVER_EXECUTABLE_PATH} && ls -la ./lenovo/development*/)`, (err, so, se) => {
-        //     if (err) {
-        //         console.log('exec error: ', err)
-        //         return
-        //     }
-        //     const lines = so.split(/\r?\n/);
-        //     const ret = lines.reduce((acc, cur) => {
-        //         return `${acc}${cur}<br />\r\n`
-        //     }, '');
-        //     console.log('stdout:', ret);
-        //     console.error('stderr:', se);
-        //     res.send(ret)
-        // });
-    
-    });
-    
     
     expressApp.use("/", router);
     expressApp.use(express.static("static"));
