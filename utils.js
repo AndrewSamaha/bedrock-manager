@@ -1,10 +1,6 @@
 const os = require('os');
 require('dotenv').config()
 
-const CONFIG_FILE_PATH = './config.json'
-const cjson = require(CONFIG_FILE_PATH);
-
-
 const UNZIPPED_SERVER_FOLDER_NAME = `bedrock-server`;
 const UNZIPPED_SERVERS_CONTAINER = './servers'
 const UNZIPPED_SERVER_FOLDER_PATH = process.env.SERVER_EXECUTABLE_PATH;
@@ -73,7 +69,6 @@ function formatBytes(a, b = 3) {
 
 
 module.exports = {
-  CONFIG_FILE_PATH,
   UNZIPPED_SERVERS_CONTAINER,
   UNZIPPED_SERVER_FOLDER_NAME,
   UNZIPPED_SERVER_FOLDER_PATH,

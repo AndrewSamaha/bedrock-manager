@@ -1,9 +1,12 @@
 // Creates the server properties from config.json
+require('dotenv').config();
+
 const assert = require('assert');
 const fs = require('fs');
 const util = require('util');
+
+const config = require('./config.js');
 const {
-  CONFIG_FILE_PATH,
   SERVER_PROPERTIES_FILE_PATH,
   SERVER_PROPERTIES_FIELDS
 } = require('./utils.js')
@@ -13,12 +16,7 @@ const getServerPropertiesContentString = (serverProperties) => {
 }
 
 const createServerProperties = util.promisify((callback) => {
-
-  const configFile = fs.readFileSync(CONFIG_FILE_PATH, 'utf8');
-  const config = JSON.parse(configFile);
   const configServerProperties = config['server-properties'];
-  assert(configServerProperties, `Expected to find server-properties in ${CONFIG_FILE_PATH}`);
-
   actualConfigServerPropertyFields = Object.keys(configServerProperties);
 
   // check that the fields are what we expect
@@ -31,7 +29,7 @@ const createServerProperties = util.promisify((callback) => {
 
   fs.writeFileSync(SERVER_PROPERTIES_FILE_PATH, content);
 
-  console.log(`Overwrote ${SERVER_PROPERTIES_FILE_PATH} based on contents of ${CONFIG_FILE_PATH}`);
+  console.log(`Overwrote ${SERVER_PROPERTIES_FILE_PATH} based on contents of ${process.env.CONFIG_FILE_PATH}`);
   callback();
 });
 
