@@ -3,9 +3,10 @@ require('dotenv').config()
 
 const UNZIPPED_SERVER_FOLDER_NAME = `bedrock-server`;
 const UNZIPPED_SERVERS_CONTAINER = './servers'
-const UNZIPPED_SERVER_FOLDER_PATH = process.env.SERVER_EXECUTABLE_PATH;
+const SERVER_ROOT_FOLDER = process.env.ENVIRONMENT === 'PRODUCTION' ? `${process.env.PRODUCTION_SERVER_PATH}` : `${process.env.STAGING_SERVER_PATH}`;
+const UNZIPPED_SERVER_FOLDER_PATH = SERVER_ROOT_FOLDER;
 const ZIPPED_SERVER_PATH = `${UNZIPPED_SERVER_FOLDER_PATH}.zip`;
-const SERVER_EXECUTABLE_PATH = `${process.env.SERVER_EXECUTABLE_PATH}/bedrock_server`;
+const SERVER_EXECUTABLE_PATH = `${SERVER_ROOT_FOLDER}/bedrock_server`;
 const WINDOWS_SERVER_LINK = `https://minecraft.azureedge.net/bin-win/${UNZIPPED_SERVER_FOLDER_NAME}.zip`;
 const LINUX_SERVER_LINK = `https://minecraft.azureedge.net/bin-linux/${UNZIPPED_SERVER_FOLDER_NAME}.zip`;
 const BACKUP_FOLDER_NAME = 'backups'
