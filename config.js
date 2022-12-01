@@ -13,7 +13,7 @@ set(config,
     `${get(config, 'server-properties.level-name','unknown level')} ${process.env.ENVIRONMENT}`);
 
 set(config,
-    "ui.admin-code-sha2560hash",
+    "ui.admin-code-sha256-hash",
     process.env.UI_ADMIN_HASH);
 
 set(config,
