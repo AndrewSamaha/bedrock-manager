@@ -105,7 +105,7 @@ let salt = crypto
 const uiConfig = config.ui;
 if ((uiConfig || {}).enabled) {
     console.log("Starting express server");
-
+    
     function clientHashIsValid(clientHashWithSalt) {
         return (
             (clientHashWithSalt || "").toUpperCase() ===
@@ -299,7 +299,7 @@ createServerProperties().then(async () => {
     if (process.env.RESTORE_BACKUP_ON_STARTUP === 'true') await restoreLatestLocalBackup();
 
     console.log(`Starting Minecraft Bedrock server in ${process.env.ENVIRONMENT} mode...`);
-
+    console.log(`Path: ${UNZIPPED_SERVER_FOLDER_PATH}/bedrock_server`)
     const spawnServer = () => {
         bs = spawn("./bedrock_server", [], {
             stdio: ["pipe", "pipe", "pipe", "ipc"],

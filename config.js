@@ -13,6 +13,15 @@ set(config,
     `${get(config, 'server-properties.level-name','unknown level')} ${process.env.ENVIRONMENT}`);
 
 set(config,
+    'server-properties.server-port',
+    process.env.ENVIRONMENT === "PRODUCTION" ? process.env.PRODUCTION_SERVER_PORT : process.env.STAGING_SERVER_PORT)
+
+set(config,
+    'server-properties.server-portv6',
+    process.env.ENVIRONMENT === "PRODUCTION" ? process.env.PRODUCTION_SERVER_PORTV6 : process.env.STAGING_SERVER_PORTV6)
+    
+
+set(config,
     "ui.admin-code-sha256-hash",
     process.env.UI_ADMIN_HASH);
 
