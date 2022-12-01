@@ -8,9 +8,9 @@ set(config,
     "server-properties.server-name",
     `${get(config, 'server-properties.server-name','unknown server')} ${process.env.ENVIRONMENT}`);
 
-set(config,
-    "server-properties.level-name",
-    `${get(config, 'server-properties.level-name','unknown level')} ${process.env.ENVIRONMENT}`);
+// set(config,
+//     "server-properties.level-name",
+//     `${get(config, 'server-properties.level-name','unknown level')} ${process.env.ENVIRONMENT}`);
 
 set(config,
     'server-properties.server-port',
