@@ -4,7 +4,7 @@ const assert = require("assert");
 const { Readable, Writable } = require("stream");
 let { spawn, exec } = require("child_process");
 const pidusage = require("pidusage");
-
+const { startGameServer } = require('./gameServer.js');
 const {
     UNZIPPED_SERVERS_CONTAINER,
     UNZIPPED_SERVER_FOLDER_PATH,
@@ -63,83 +63,7 @@ let hasSentStopCommand = false;
 let currentBackupType = null;
 
 console.log = newlog;
-
-const spawnServer = (args) => {
-    const { saveQueryInterval, saveHoldInterval } = args;
-
-    const bs = spawn("./bedrock_server", [], {
-        stdio: ["pipe", "pipe", "pipe", "ipc"],
-        cwd: UNZIPPED_SERVER_FOLDER_PATH
-    });
-
-    bs.stderr.on("data", error => {
-        console.error(`SERVER STDERROR: ${error}`);
-    });
-
-    bs.on("error", data => {
-        console.log(`SERVER ERROR: ${data}`);
-    });
-
-    bs.on("close", code => {
-        console.log(
-            `Minecraft server child process exited with code ${code}`
-        );
-    });
-
-    bs.stdout?.on("data", async data => {
-        if (
-            /^(A previous save has not been completed\.|Saving\.\.\.|Changes to the level are resumed\.)/i.test(
-                data
-            )
-        ) {
-            // do nothing
-        } else if (
-            /^(Data saved\. Files are now ready to be copied\.)/i.test(
-                data
-            )
-        ) {
-            isCurrentlyBackingUp = true;
-
-            const backupStartTime = Math.floor(new Date() / 1000);
-            const backupType = currentBackupType;
-            console.log(
-                `Files ready for backup! Creating backup of server state at ${new Date(
-                    backupStartTime * MS_IN_SEC
-                ).toLocaleString()} with type ${backupType}...`
-            );
-
-            const dataSplit = data
-                .toString()
-                .split(
-                    "Data saved. Files are now ready to be copied."
-                );
-            const backupFileListString = dataSplit[
-                dataSplit.length - 1
-            ].replace(/(\n|\r|\\n|\\r)/g, "");
-            await createBackup(
-                backupFileListString,
-                backupStartTime,
-                backupType
-            );
-            isCurrentlyBackingUp = false;
-            bs.stdin.write("save resume\r\n");
-            // stop here, since the backup before stop has completed;
-            if (hasSentStopCommand) {
-                clearInterval(saveQueryInterval);
-                clearInterval(saveHoldInterval);
-                bs.stdin.write("stop\r\n");
-                setTimeout(async () => {
-                    await deleteLockFileIfExists();
-                    process.exit(0);
-                }, MS_IN_SEC);
-            }
-        } else {
-            console.log(`${data.toString().replace(/\n$/, "")}`);
-        }
-    });
-    return bs;
-};
-
+// We might need to pass this to spawnServer
 
 createServerProperties().then(async () => {
     await createBackupBucketIfNotExists();
@@ -161,9 +85,9 @@ createServerProperties().then(async () => {
     console.log(`Starting Minecraft Bedrock server in ${process.env.ENVIRONMENT} mode...`);
     console.log(`Path: ${UNZIPPED_SERVER_FOLDER_PATH}/bedrock_server`)
     
-    const bs = spawnServer({ saveQueryInterval, saveHoldInterval });
+    const { bs, requestStopServer } = startGameServer({ saveQueryInterval, saveHoldInterval });
     let { rl } = setupAdmin(bs);
-    
+
     let lastQueryWasSaveSucccessful = false;
 
     saveQueryInterval = setInterval(() => {
@@ -210,9 +134,8 @@ createServerProperties().then(async () => {
 
     const triggerGracefulExit = () => {
         console.log("Backing up, then killing Minecraft server...");
-        hasSentStopCommand = true;
-        currentBackupType = BACKUP_TYPES.ON_STOP;
         bs.stdin.write("save hold\r\n");
+        requestStopServer(true);
     };
 
     process.on("SIGINT", async () => {
