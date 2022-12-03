@@ -44,6 +44,9 @@ const SERVER_PROPERTIES_FIELDS = [
 const SEC_IN_MIN = 60;
 const MS_IN_SEC = 1000;
 const MS_IN_MIN = MS_IN_SEC * SEC_IN_MIN;
+const SAVE_QUERY_FREQUENCY = MS_IN_SEC * 5;
+const UI_COMMAND_DELAY = MS_IN_SEC * 1;
+
 const BUCKET_LOCK_FILE_NAME = 'BUCKET_LOCK.txt'
 const BUCKET_LOCK_FILE_CONTENTS_PATH='./LOCK_FILE_TEXT.txt'
 
@@ -68,6 +71,36 @@ function formatBytes(a, b = 3) {
     );
 }
 
+const MAX_STORED_LINES = 20;
+const consoleLogBuffer = [];
+const originalConsoleLog = console.log;
+const newlog = text => {
+    originalConsoleLog(text);
+    consoleLogBuffer.push((text || "").toString().replace(/\n/, "<br>"));
+    if (consoleLogBuffer.length > MAX_STORED_LINES) {
+        consoleLogBuffer.shift(); // delete first item.
+    }
+};
+
+function sec2time(timeInSeconds) {
+  var pad = function(num, size) {
+          return ("000" + num).slice(size * -1);
+      },
+      time = parseFloat(timeInSeconds).toFixed(3),
+      hours = Math.floor(time / 3600),
+      minutes = Math.floor(time / 60) % 60,
+      seconds = Math.floor(time - minutes * 60),
+      milliseconds = time.slice(-3);
+  return (
+      pad(hours, 2) +
+      ":" +
+      pad(minutes, 2) +
+      ":" +
+      pad(seconds, 2) +
+      "." +
+      pad(milliseconds, 3)
+  );
+}
 
 module.exports = {
   UNZIPPED_SERVERS_CONTAINER,
@@ -87,10 +120,16 @@ module.exports = {
   SERVER_PROPERTIES_FILE_PATH,
   SERVER_PROPERTIES_FIELDS,
   SEC_IN_MIN,
+  UI_COMMAND_DELAY,
   MS_IN_SEC,
   MS_IN_MIN,
+  MAX_STORED_LINES,
+  SAVE_QUERY_FREQUENCY,
   BUCKET_LOCK_FILE_NAME,
   BUCKET_LOCK_FILE_CONTENTS_PATH,
   formatBytes,
-  platform
+  platform,
+  newlog,
+  sec2time,
+  consoleLogBuffer
 }
