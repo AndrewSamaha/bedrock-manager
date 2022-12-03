@@ -4,7 +4,7 @@ const assert = require("assert");
 const { Readable, Writable } = require("stream");
 let { spawn, exec } = require("child_process");
 const pidusage = require("pidusage");
-const { startGameServer } = require('./gameServer.js');
+const { startGameServer } = require('./src/gameServer.js');
 const {
     UNZIPPED_SERVERS_CONTAINER,
     UNZIPPED_SERVER_FOLDER_PATH,
@@ -17,13 +17,13 @@ const {
     platform,
     newlog,
     sec2time
-} = require("./utils.js");
+} = require("./src/utils.js");
 
 if (platform === "win32") {
     spawn = require("cross-spawn");
 }
 
-const { createServerProperties } = require("./create-server-properties.js");
+const { createServerProperties } = require("./src/create-server-properties.js");
 
 const {
     createBackupBucketIfNotExists,
@@ -37,13 +37,13 @@ const {
     doesLockFileExistOrS3Disabled,
     createLockFileIfS3Enabled,
     deleteLockFileIfExists,
-} = require("./backup.js");
+} = require("./src/backup.js");
 
-const { setupAdmin } = require("./admin.js");
+const { setupAdmin } = require("./src/admin.js");
 
 fs.ensureDirSync(UNZIPPED_SERVERS_CONTAINER);
 
-const config = require('./config.js');
+const config = require('./src/config.js');
 
 const backupConfig = config.backup;
 assert(backupConfig, `Could not find field 'backup' at root of config`);

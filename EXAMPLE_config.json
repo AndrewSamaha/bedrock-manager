@@ -1,20 +1,13 @@
-// Rename this file to 'config.json' and delete this comment before starting
-//
-// See bedrock_server_how_to.html for more detailed information about what
-// each of the fields in "server-properties" do
-//
-// Delete all the lines not below this one
-
 {
-  "accept-official-minecraft-server-eula": false,
-  "minecraft-server-version": "1.19.1.01",
+  "accept-official-minecraft-server-eula": true,
+  "minecraft-server-version": "1.19.40",
   "server-properties": {
-    "server-name": "Dedicated Node S3 Server",
+    "server-name": "Minecraft Server",
     "gamemode": "survival",
     "difficulty": "normal",
-    "allow-cheats": false,
+    "allow-cheats": true,
     "max-players": 10,
-    "online-mode": true,
+    "online-mode": false,
     "white-list": false,
     "server-port": 19132,
     "server-portv6": 19133,
@@ -22,10 +15,10 @@
     "tick-distance": 4,
     "player-idle-timeout": 30,
     "max-threads": 8,
-    "level-name": "My Cool Level",
+    "level-name": "EasyPeasy",
     "level-seed": null,
     "default-player-permission-level": "member",
-    "texturepack-required": false,
+    "texturepack-required": true,
     "content-log-file-enabled": false,
     "compression-threshold": 1,
     "server-authoritative-movement": "server-auth",
@@ -35,25 +28,25 @@
     "correct-player-movement": false
   },
   "ui": {
-    "enabled": false,
+    "enabled": true,
     "port": 3000,
-    "admin-code-sha256-hash": "replace-this-with-the-sha256-hash-of-your-admin-code"
+    "admin-code-sha256-hash": "rewriteme"
   },
   "backup": {
-    "backup-frequency-minutes": 20,
+    "backup-frequency-minutes": 10000000,
     "use-aws-s3-backup": false,
     "num-backups-to-keep-for-type": {
       "local": {
-        "SCHEDULED": 20,
-        "MANUAL": -1,
-        "ON_STOP": 30,
+        "SCHEDULED": -1,
+        "MANUAL": 1,
+        "ON_STOP": -1,
         "ON_FORCED_STOP": -1
       },
       "remote": {
-        "SCHEDULED": 15,
-        "MANUAL": 30,
-        "ON_STOP": 20,
-        "ON_FORCED_STOP": 15
+        "SCHEDULED": -1,
+        "MANUAL": -1,
+        "ON_STOP": -1,
+        "ON_FORCED_STOP": -1
       }
     }
   }
