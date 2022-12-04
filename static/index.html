@@ -8,11 +8,12 @@
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/index.css">
 
   <title>Bedrock Manager</title>
 </head>
 
-<body style="color: #f8f9fa; background-color: #343a40; background-image: url('/png/bg_black_tile.png')">
+<body>
   <div style="padding: 10px">
 
     <div id="login-content">
@@ -25,24 +26,25 @@
 
     <div id="post-login-content" hidden="true">
       <div>
+        Server Terminal Output:
+        <div class="terminal-output">
+          <pre><code id="server-terminal-output">Error: No Terminal Output Found</code></pre>
+        </div>
+        
+        Server Resource Usage Info:
+        <div class="terminal-output">
+          <pre><code id="server-resource-usage-text">Error: No Server Resource Usage Info Found</code></pre>
+        </div>
+      </div>
+
+      <div>
         <i style="padding-top: 10px">
           Refresh frequency: every
           <select name="refresh-rate" id="refresh-rate" class="btn dropdown-toggle" style="padding-top: 1px; padding-bottom: 1px;">
             <option value="500">0.5 Seconds</option>
             <option value="5000">5 Seconds (recommended)</option>
-          </select>
+          </select><br>
         </i>
-        <h2 style="padding-top: 10px">Server Resource Usage Info:</h2>
-        <div style="color: #f8f9fa; background-color: #8fbfe9; background-image: url('/png/bg_clouds.png')" class="card card-body">
-          <pre><code id="server-resource-usage-text">Error: No Server Resource Usage Info Found</code></pre>
-        </div>
-        <h2 style="padding-top: 10px">Server Terminal Output:</h2>
-        <div style="color: #f8f9fa; background-color: #8fbfe9; background-image: url('/png/bg_clouds.png')" class="card card-body">
-          <pre><code id="server-terminal-output">Error: No Terminal Output Found</code></pre>
-        </div>
-      </div>
-
-      <div>
         <button class="btn" id="print-player-list-button" style="margin-top: 10px">Print Player List</button>
         <button class="btn" id="print-resource-usage-button" style="margin-top: 10px">Print Resource Usage</button>
         <button class="btn btn-danger" id="stop-server-button" style="margin-top: 10px">Stop Server</button>
@@ -70,12 +72,10 @@
     </div>
   </div>
 
-  <footer style="padding: 10px; color: white; font-weight:600">
-    <small>
-      Bedrock Manager <span id="bedrockManagerBranch">unknwn branch</span> | <span id="bedrockManagerVersion">v0.0.0</span><br />
-      Server source code and documentation: <a href="https://github.com/AndrewSamaha/bedrock-manager" target="_blank">github.com/AndrewSamaha/bedrock-manager</a><br />
-      Backgrounds from <a href="https://minecraftforum.net" target="_blank" >minecraftforum.net</a>
-    </small>
+  <footer>
+    <div>Bedrock Manager</div> 
+    <div><span id="bedrockManagerBranch"></span> | <span id="bedrockManagerVersion"></span></div>
+    <div><a href="https://github.com/AndrewSamaha/bedrock-manager" target="_blank">github.com/AndrewSamaha/bedrock-manager</a></div>
   </footer>
 
   <script src="https://bitwiseshiftleft.github.io/sjcl/sjcl.js" crossorigin="anonymous"></script>

@@ -27,16 +27,6 @@ const setupAdmin = (bs) => {
 
     const gitTag = git.tag();
     const gitBranch = git.branch();
-    // console.log('git.short() => ' + git.short());
-    // console.log('git.long() => ' + git.long());
-    console.log('git.branch() => ' + git.branch());
-    // console.log('git.message() => ' + git.message());
-    // console.log('git.tag() => ' + git.tag());
-    // console.log('git.tag(true) => ' + git.tag(true));
-    // console.log('git.count() => ' + git.count());
-    console.log('tagname => ' + gitTag);
-    console.log('npm_package_version ' + process.env.npm_package_version); // https://docs.npmjs.com/cli/v6/using-npm/scripts#packagejson-vars
-    console.log('git.branch() => ' + git.branch());
 
     const rl = readline.createInterface({
         input: process.stdin,
