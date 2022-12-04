@@ -25,6 +25,7 @@
     "eslint": "^8.28.0",
     "express": "^4.16.3",
     "fs-extra": "^9.0.0",
+    "git-rev-sync": "^3.0.2",
     "lodash": "^4.17.21",
     "pidusage": "^2.0.21",
     "unzipper": "^0.10.10"

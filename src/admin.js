@@ -4,6 +4,7 @@ const express = require("express");
 const fs = require('fs-extra');
 const readline = require("readline");
 const pidusage = require("pidusage");
+const git = require('git-rev-sync');
 
 const config = require('./config.js');
 const { newlog, MAX_STORED_LINES, consoleLogBuffer, UI_COMMAND_DELAY } = require("./utils.js");
@@ -23,7 +24,20 @@ const refreshSalt = () => {
 const uiConfig = config.ui;
 
 const setupAdmin = (bs) => {
-    
+
+    const gitTag = git.tag();
+    const gitBranch = git.branch();
+    // console.log('git.short() => ' + git.short());
+    // console.log('git.long() => ' + git.long());
+    console.log('git.branch() => ' + git.branch());
+    // console.log('git.message() => ' + git.message());
+    // console.log('git.tag() => ' + git.tag());
+    // console.log('git.tag(true) => ' + git.tag(true));
+    // console.log('git.count() => ' + git.count());
+    console.log('tagname => ' + gitTag);
+    console.log('npm_package_version ' + process.env.npm_package_version); // https://docs.npmjs.com/cli/v6/using-npm/scripts#packagejson-vars
+    console.log('git.branch() => ' + git.branch());
+
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -54,6 +68,11 @@ const setupAdmin = (bs) => {
     const expressApp = express();
     const router = express.Router();
     expressApp.use(express.json());
+    expressApp.use((req, res, next) => {
+        res.append('git-tag', gitTag);
+        res.append('git-branch', gitBranch);
+        next();
+    });
 
     router.get("/terminal-out", (req, res) => {
         res.send(
