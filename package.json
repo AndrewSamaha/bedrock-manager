@@ -1,6 +1,6 @@
 {
   "name": "bedrock-manager",
-  "version": "v0.1.0",
+  "version": "0.2.0",
   "description": "Easy to use Minecraft Bedrock Server with automatic cloud backups",
   "main": "index.js",
   "scripts": {
