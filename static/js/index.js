@@ -95,6 +95,8 @@ function attemptLogin() {
                 if (xhr.response === 'true') {
                     document.getElementById('login-content').hidden = true;
                     document.getElementById('post-login-content').hidden = false;
+                    document.getElementById("bedrockManagerBranch").innerHTML = xhr.getResponseHeader('git-branch');
+                    document.getElementById("bedrockManagerVersion").innerHTML = xhr.getResponseHeader('git-tag');
                 } else {
                     alert('Incorrect admin code');
                 }

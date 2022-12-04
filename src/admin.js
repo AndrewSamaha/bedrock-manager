@@ -4,6 +4,7 @@ const express = require("express");
 const fs = require('fs-extra');
 const readline = require("readline");
 const pidusage = require("pidusage");
+const git = require('git-rev-sync');
 
 const config = require('./config.js');
 const { newlog, MAX_STORED_LINES, consoleLogBuffer, UI_COMMAND_DELAY } = require("./utils.js");
@@ -23,7 +24,10 @@ const refreshSalt = () => {
 const uiConfig = config.ui;
 
 const setupAdmin = (bs) => {
-    
+
+    const gitTag = git.tag();
+    const gitBranch = git.branch();
+
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -54,6 +58,11 @@ const setupAdmin = (bs) => {
     const expressApp = express();
     const router = express.Router();
     expressApp.use(express.json());
+    expressApp.use((req, res, next) => {
+        res.append('git-tag', gitTag);
+        res.append('git-branch', gitBranch);
+        next();
+    });
 
     router.get("/terminal-out", (req, res) => {
         res.send(
