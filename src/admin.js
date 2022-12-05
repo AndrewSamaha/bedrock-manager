@@ -5,6 +5,7 @@ const fs = require('fs-extra');
 const readline = require("readline");
 const pidusage = require("pidusage");
 const git = require('git-rev-sync');
+const { glob } = require('glob');
 
 const config = require('./config.js');
 const { newlog, MAX_STORED_LINES, consoleLogBuffer, UI_COMMAND_DELAY } = require("./utils.js");
@@ -24,7 +25,7 @@ const refreshSalt = () => {
 const uiConfig = config.ui;
 
 const setupAdmin = (bs) => {
-
+    const routePath="/routes/**/*.js"; 
     const gitTag = git.tag();
     const gitBranch = git.branch();
 
@@ -56,6 +57,14 @@ const setupAdmin = (bs) => {
     }
 
     const expressApp = express();
+
+    glob(__dirname + routePath, {}, (err, files) => {
+        files.forEach((file) => {
+            console.log('registering prehook ' + routePath + '--' + file)
+            require(file).registerPreHook(router);
+        })
+    })
+
     const router = express.Router();
     expressApp.use(express.json());
     expressApp.use((req, res, next) => {
@@ -176,11 +185,6 @@ const setupAdmin = (bs) => {
         }, UI_COMMAND_DELAY);
     });
 
-    router.get("/backup-size-list", async (req, res) => {
-        const backups = await getBackupSizeList();
-        res.send(backups);
-    });
-
     router.get("/list-available-mods", async (req, res) => {
         const bpPath = `${process.env.MOD_IMPORT_PATH}/development_behavior_packs`;
         const rpPath = `${process.env.MOD_IMPORT_PATH}/development_resource_packs`;
@@ -214,6 +218,14 @@ const setupAdmin = (bs) => {
         // });
     
     });
+
+    
+    glob(__dirname + routePath, {}, (err, files) => {
+        files.forEach((file) => {
+            console.log('registering route ' + routePath + '--' + file)
+            require(file).registerRoute(router);
+        })
+    })
     
     expressApp.use("/", router);
     expressApp.use(express.static("static"));
