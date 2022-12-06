@@ -4,8 +4,9 @@
   "description": "Easy to use Minecraft Bedrock Server with automatic cloud backups",
   "main": "index.js",
   "scripts": {
+    "prepare": "husky install",
     "start": "node index.js",
-    "develop": "nodemon index.js"
+    "commit": "git cz"
   },
   "repository": {
     "type": "git",
@@ -27,8 +28,22 @@
     "fs-extra": "^9.0.0",
     "git-rev-sync": "^3.0.2",
     "glob": "^8.0.3",
+    "husky": "^8.0.2",
     "lodash": "^4.17.21",
     "pidusage": "^2.0.21",
     "unzipper": "^0.10.10"
+  },
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
+    }
   }
 }
