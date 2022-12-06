@@ -19,6 +19,9 @@
   },
   "homepage": "https://github.com/AndrewSamaha/bedrock-manager#readme",
   "dependencies": {
+    "@commitlint/cli": "^17.3.0",
+    "@commitlint/config-conventional": "^17.3.0",
+    "@commitlint/cz-commitlint": "^17.3.0",
     "archiver": "^3.1.1",
     "aws-sdk": "^2.656.0",
     "cross-spawn": "^7.0.2",
@@ -38,7 +41,7 @@
   },
   "config": {
     "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
+      "path": "@commitlint/cz-commitlint"
     }
   },
   "husky": {
