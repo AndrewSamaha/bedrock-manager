@@ -1,5 +1,6 @@
 # Bedrock Manager
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
 An interface and wrapper for Minecraft Bedrock with locally-managed mod and configuration versioning using GIT.
 
 Based on [minecraft-bedrock-server](https://github.com/debkbanerji/minecraft-bedrock-server) by [Deb Banerji](https://github.com/debkbanerji).
