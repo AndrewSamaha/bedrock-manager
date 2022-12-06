@@ -1,6 +1,7 @@
 const { getBackupSizeList } = require("../../backup.js");
 
 const path = "/backup-size-list";
+
 module.exports.registerPreHook = (app) => {
     app.use(path, async (req, res, next) => {
         console.log('pre', path)

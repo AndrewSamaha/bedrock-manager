@@ -58,11 +58,11 @@ const setupAdmin = (bs) => {
 
     const expressApp = express();
 
-    glob(__dirname + routePath, {}, (err, files) => {
-        files.forEach((file) => {
-            console.log('registering prehook ' + routePath + '--' + file)
-            require(file).registerPreHook(router);
-        })
+    const routeFiles = glob.sync(__dirname + routePath);
+
+    routeFiles.forEach((file) => {
+        console.log('registering prehook ' + routePath + '--' + file)
+        require(file).registerPreHook(router);
     })
 
     const router = express.Router();
