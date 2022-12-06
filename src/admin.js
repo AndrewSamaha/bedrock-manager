@@ -59,11 +59,10 @@ const setupAdmin = (bs) => {
     const expressApp = express();
 
     const routeFiles = glob.sync(__dirname + routePath);
-
-    routeFiles.forEach((file) => {
-        console.log('registering prehook ' + routePath + '--' + file)
-        require(file).registerPreHook(router);
-    })
+    const routes = routeFiles.map((file) => require(file));
+    
+    // register pre-hooks for routes
+    routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
 
     const router = express.Router();
     expressApp.use(express.json());
@@ -219,14 +218,8 @@ const setupAdmin = (bs) => {
     
     });
 
-    
-    glob(__dirname + routePath, {}, (err, files) => {
-        files.forEach((file) => {
-            console.log('registering route ' + routePath + '--' + file)
-            require(file).registerRoute(router);
-        })
-    })
-    
+    routes.forEach(({path, routeHandler}) => routeHandler && router.get(path, routeHandler));
+
     expressApp.use("/", router);
     expressApp.use(express.static("static"));
     expressApp.listen(uiConfig.port);
