@@ -296,7 +296,7 @@ function getBackupDescriptionString(backup) {
 
 function refreshBackupList() {
     setSelectedBackup(null);
-    fetch("/backup-size-list")
+    fetch("/v1/backup-size-list")
         .then(response => response.json())
         .then(backups => {
             const dropdownOptions = document.getElementById(

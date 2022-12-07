@@ -6,10 +6,12 @@ const readline = require("readline");
 const pidusage = require("pidusage");
 const git = require('git-rev-sync');
 const { glob } = require('glob');
+const flatten = require('lodash/flatten');
 
 const config = require('./config.js');
 const { newlog, MAX_STORED_LINES, consoleLogBuffer, UI_COMMAND_DELAY } = require("./utils.js");
 const { getBackupList, getBackupSizeList } = require("./backup.js");
+
 
 console.log = newlog;
 
@@ -58,13 +60,6 @@ const setupAdmin = (bs) => {
 
     const expressApp = express();
 
-    const routeFiles = glob.sync(__dirname + routePath);
-    const routes = routeFiles.map((file) => require(file));
-    
-    // register pre-hooks for routes
-    routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
-
-    const router = express.Router();
     expressApp.use(express.json());
     expressApp.use((req, res, next) => {
         res.append('git-tag', gitTag);
@@ -72,6 +67,14 @@ const setupAdmin = (bs) => {
         next();
     });
 
+    // Read routes from files
+    const routes = flatten(glob.sync(__dirname + routePath).map((file) => require(file)));
+
+    // Assign pre-hooks for each route
+    routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
+
+    const router = express.Router();
+    
     router.get("/terminal-out", (req, res) => {
         res.send(
             [`${MAX_STORED_LINES} latest lines of terminal output:`]
@@ -218,7 +221,8 @@ const setupAdmin = (bs) => {
     
     });
 
-    routes.forEach(({path, routeHandler}) => routeHandler && router.get(path, routeHandler));
+    // Assign routes from files
+    routes.forEach(({path, verb, routeHandler}) => routeHandler && router[verb](path, routeHandler));
 
     expressApp.use("/", router);
     expressApp.use(express.static("static"));
