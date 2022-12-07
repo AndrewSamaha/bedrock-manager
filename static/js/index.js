@@ -78,21 +78,17 @@ function attemptLogin() {
     fetch("/salt")
         .then(response => response.text())
         .then(salt => {
+            const hexToken = sjcl.codec.hex.fromBits(
+                sjcl.hash.sha256.hash(inputAdminCodeHash + salt.toUpperCase())
+            );
             updateCurrentAdminCodeHash();
             const xhr = new XMLHttpRequest();
             xhr.open("GET", "/is-auth-valid", true);
             xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.setRequestHeader(
-                "Authorization",
-                sjcl.codec.hex.fromBits(
-                    sjcl.hash.sha256.hash(
-                        inputAdminCodeHash + salt.toUpperCase()
-                    )
-                )
-            );
+            xhr.setRequestHeader("Authorization", hexToken);
             xhr.send(JSON.stringify({}));
-            xhr.onload = (res) => {
-                if (xhr.response === 'true') {
+            xhr.onload = ({isTrusted}) => {
+                if (isTrusted === true) {
                     document.getElementById('login-content').hidden = true;
                     document.getElementById('post-login-content').hidden = false;
                     document.getElementById("bedrockManagerBranch").innerHTML = xhr.getResponseHeader('git-branch');
@@ -296,24 +292,41 @@ function getBackupDescriptionString(backup) {
 
 function refreshBackupList() {
     setSelectedBackup(null);
-    fetch("/v1/backup-size-list")
-        .then(response => response.json())
-        .then(backups => {
-            const dropdownOptions = document.getElementById(
-                "restore-backup-options"
-            );
-            dropdownOptions.innerHTML = "";
-            backups.forEach(backup => {
-                const option = document.createElement("a");
-                option.className = "dropdown-item " + getClassForBackup(backup.name);
-                option.textContent = backup.name + getBackupDescriptionString(backup);
-                option.value = backup.name;
-                option.addEventListener("click", () =>
-                    setSelectedBackup(backup)
+    fetch("/salt")
+    .then(response => response.text())
+    .then(salt => {
+        const hexToken = sjcl.codec.hex.fromBits(
+            sjcl.hash.sha256.hash(inputAdminCodeHash + salt.toUpperCase())
+        );
+        updateCurrentAdminCodeHash();
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "/v1/backup-size-list", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization", hexToken);
+        xhr.send(JSON.stringify({}));
+        xhr.onload = (res) => {
+            const { isTrusted } = res;
+            const backups = JSON.parse(xhr.response)
+            if (isTrusted === true) {
+                const dropdownOptions = document.getElementById(
+                    "restore-backup-options"
                 );
-                dropdownOptions.appendChild(option);
-            });
-        });
+                dropdownOptions.innerHTML = "";
+                backups.forEach(backup => {
+                    const option = document.createElement("a");
+                    option.className = "dropdown-item " + getClassForBackup(backup.name);
+                    option.textContent = backup.name + getBackupDescriptionString(backup);
+                    option.value = backup.name;
+                    option.addEventListener("click", () =>
+                        setSelectedBackup(backup)
+                    );
+                    dropdownOptions.appendChild(option);
+                });
+            } else {
+                alert('Incorrect admin code');
+            }
+        };
+    });
 }
 
 function setSelectedBackup(backup) {
