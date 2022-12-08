@@ -91,30 +91,6 @@ const setupAdmin = (appContext) => {
 
     const router = express.Router();
 
-    router.post("/trigger-restore-backup", async (req, res) => {
-        const { body, appContext } = req;
-        const { rl } = appContext;
-        // const { adminCodeHash } = { body };
-        setTimeout(async () => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                const backup = body.backup;
-                const backups = await getBackupList();
-                if (backups.includes(backup)) {
-                    // do this check to avoid weird injection errors
-                    rl.write(`force-restore ${body.backup}\n`);
-                } else {
-                    console.log(`Backup ${body.backup} not found`);
-                }
-                res.sendStatus(200);
-            } else {
-                console.log(
-                    `Rejected unauthorized request to restore backup ${body.backup}`
-                );
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
     router.get("/list-available-mods", async (req, res) => {
         const bpPath = `${process.env.MOD_IMPORT_PATH}/development_behavior_packs`;
         const rpPath = `${process.env.MOD_IMPORT_PATH}/development_resource_packs`;

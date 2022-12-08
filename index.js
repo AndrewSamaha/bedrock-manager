@@ -52,7 +52,7 @@ const appContext = {
     currentBackupType: null,
     saveQueryInterval: null,
     saveHoldInterval: null,
-    requestStopServer: null
+    requestStopServer: (_) => {}
 };
 
 fs.ensureDirSync(UNZIPPED_SERVERS_CONTAINER);
@@ -90,19 +90,24 @@ createServerProperties().then(async () => {
     console.log(`Starting Minecraft Bedrock server in ${process.env.ENVIRONMENT} mode...`);
     console.log(`Path: ${UNZIPPED_SERVER_FOLDER_PATH}/bedrock_server`)
     
-    const gameServerArtifacts = startGameServer(appContext);
-    const { bs, requestStopServer } = gameServerArtifacts;
-    appContext.bs = bs;
-    appContext.requestStopServer = requestStopServer;
+    appContext.setBs = (newBs) => {appContext.bs = newBs};
+
+    const spawnServerAndUpdateContext = (appContext) => {
+        const gameServerArtifacts = startGameServer(appContext);
+        const { bs: newBs, requestStopServer } = gameServerArtifacts;
+        appContext.setBs(newBs);
+        appContext.gameServerWrite = (cmd) => { appContext.bs.stdin.write(cmd) };
+        appContext.requestStopServer = requestStopServer;
+    }
+
+    spawnServerAndUpdateContext(appContext);
 
     let { rl } = await setupAdmin(appContext);
 
-    let lastQueryWasSaveSucccessful = false;
-
     saveQueryInterval = setInterval(() => {
         const { isCurrentlyBackingUp } = appContext;
-        if (!isCurrentlyBackingUp && bs) {
-            bs.stdin.write("save query\r\n");
+        if (!isCurrentlyBackingUp && appContext.bs) {
+            appContext.gameServerWrite("save query\r\n");
         }
     }, SAVE_QUERY_FREQUENCY);
 
@@ -112,7 +117,7 @@ createServerProperties().then(async () => {
             // don't backup if hasSentStopCommand is true
             console.log(`Telling server to prepare for backup...`);
             appContext.currentBackupType = backupType;
-            bs.stdin.write("save hold\r\n");
+            appContext.gameServerWrite("save hold\r\n");
         }
     };
 
@@ -123,34 +128,24 @@ createServerProperties().then(async () => {
     ) : null;
 
     const printResourceUsage = () => {
-        if (bs != null) {
-            pidusage(bs.pid, function(err, stats) {
-                console.log(
-                    `Resource Usage as of ${new Date().toLocaleString()}:`
-                );
-                console.log(
-                    `CPU Percentage (from 0 to 100*vcore): ${stats.cpu.toFixed(
-                    3
-                )}%`
-                );
-                console.log(`RAM: ${formatBytes(stats.memory)}`);
-                console.log(
-                    `Wrapped Server Uptime : ${sec2time(
-                    Math.round(stats.elapsed / 1000)
-                )} (hh:mm:ss)`
-                );
-            });
-        }
+        if (appContext.bs == null) return;
+        
+        pidusage(appContext.bs.pid, function(err, stats) {
+            console.log(`Resource Usage as of ${new Date().toLocaleString()}:`);
+            console.log(`CPU Percentage (from 0 to 100*vcore): ${stats.cpu.toFixed(3)}%`);
+            console.log(`RAM: ${formatBytes(stats.memory)}`);
+            console.log(`Wrapped Server Uptime : ${sec2time(Math.round(stats.elapsed / 1000))} (hh:mm:ss)`);
+        });
     };
 
     const triggerGracefulExit = () => {
         console.log("Backing up, then killing Minecraft server...");
-        bs.stdin.write("save hold\r\n");
-        requestStopServer(true);
+        appContext.gameServerWrite("save hold\r\n");
+        appContext.requestStopServer(true);
     };
 
     process.on("SIGINT", async () => {
-        bs = null;
+        appContext.setBs(null); // = null;
         await createUnscheduledBackup(Math.floor(new Date() / 1000));
         process.exit(1);
     });
@@ -170,13 +165,13 @@ createServerProperties().then(async () => {
         } else if (/^(resource-usage)$/i.test(line)) {
             printResourceUsage();
         } else if (/^(list)$/i.test(line)) {
-            bs.stdin.write(`list\r\n`);
+            appContext.gameServerWrite(`list\r\n`);
         } else if (/^(force-restore)/i.test(line)) {
             const lineSplit = line.split("force-restore ");
             if (lineSplit.length > 0) {
                 console.log("ATTENTION: Forcefully killing server and overwriting world state with specified backup - current world state will be lost");
-                bs.stdin.write("stop\r\n");
-                bs = null;
+                appContext.gameServerWrite("stop\r\n");
+                appContext.setBs(null); //bs = null;
                 setTimeout(async () => {
                     await createUnscheduledBackup(
                         Math.floor(new Date() / 1000)
@@ -189,7 +184,7 @@ createServerProperties().then(async () => {
                             "Unable to restore backup - restarting server as is"
                         );
                     }
-                    spawnServer();
+                    spawnServerAndUpdateContext(appContext);
                 }, 2 * MS_IN_SEC);
             } else {
                 console.error("USAGE: restore <BACKUP_FILE_NAME>");
@@ -197,7 +192,7 @@ createServerProperties().then(async () => {
         } else {
             console.log("Recognized commands: backup, force-restore <BACKUP_FILE_NAME>, resource-usage, stop");
             console.log("Piping the command directly to the underlying base Minecraft server since this command was not recognized by the node wrapper");
-            bs.stdin.write(`${line}\r\n`);
+            appContext.gameServerWrite(`${line}\r\n`);
         }
     });
 });

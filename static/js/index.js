@@ -258,7 +258,7 @@ function triggerRestoreBackup() {
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-restore-backup", true);
+            xhr.open("POST", "/v1/trigger-restore-backup", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
