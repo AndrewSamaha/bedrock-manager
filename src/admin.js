@@ -79,6 +79,7 @@ const setupAdmin = (appContext) => {
     // Assign auth pre-handler for relevant routes
     routes.forEach(({path, requiresAuth}) => requiresAuth && expressApp.use(path, (req, res, next) => {
         if (!clientHashIsValid(req.header("Authorization"))) {
+            console.log(`Rejected unauthorized request to ${path}`);
             res.sendStatus(401);
             return;
         }
@@ -89,48 +90,6 @@ const setupAdmin = (appContext) => {
     routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
 
     const router = express.Router();
-
-    router.post("/trigger-manual-backup", (req, res) => {
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("backup\n");
-                res.sendStatus(200);
-            } else {
-                console.log(
-                    "Rejected unauthorized request to trigger manual backup"
-                );
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.post("/trigger-print-resource-usage", (req, res) => {
-        const { body } = req;
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("resource-usage\n");
-                res.sendStatus(200);
-            } else {
-                console.log("Rejected unauthorized request to print resource usage");
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.post("/trigger-print-player-list", (req, res) => {
-        const { body } = req;
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("list\n");
-                res.sendStatus(200);
-            } else {
-                console.log(
-                    "Rejected unauthorized request to print resource usage"
-                );
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
 
     router.post("/trigger-restore-backup", async (req, res) => {
         const { body, appContext } = req;

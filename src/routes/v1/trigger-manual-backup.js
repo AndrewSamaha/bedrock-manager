@@ -9,7 +9,7 @@ module.exports = [
         requiresAuth: true,
         routeHandler: async (req, res) => {
             const { rl } = req.appContext;
-            setTimeout(() => { rl.write("stop\n") }, UI_COMMAND_DELAY);
+            setTimeout(() => { rl.write("backup\n") }, UI_COMMAND_DELAY);
             res.sendStatus(200);
         }
     }

@@ -187,7 +187,7 @@ function triggerManualBackup() {
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-manual-backup", true);
+            xhr.open("POST", "/v1/trigger-manual-backup", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -210,7 +210,7 @@ function triggerPrintResourceUsage() {
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-print-resource-usage", true);
+            xhr.open("POST", "/v1/trigger-print-resource-usage", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -234,7 +234,7 @@ function triggerPrintPlayerList() {
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-print-player-list", true);
+            xhr.open("POST", "/v1/trigger-print-player-list", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
