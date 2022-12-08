@@ -30,12 +30,12 @@ const setupAdmin = (appContext) => {
     const routePath="/routes/**/*.js"; 
     const gitTag = git.tag();
     const gitBranch = git.branch();
-
-    appContext.rl = readline.createInterface({
+    const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         terminal: false
     });
+    appContext.rl = rl;
     appContext.getConsoleLogBuffer = () => consoleLogBuffer;
     appContext.refreshSalt = refreshSalt;
     appContext.clientHashIsValid = (clientHashWithSalt) => {
@@ -57,7 +57,7 @@ const setupAdmin = (appContext) => {
         return appContext;
     }
 
-    const { rl, bs, clientHashIsValid } = appContext;
+    const { bs, clientHashIsValid } = appContext;
     
     console.log("Starting express server");
     const expressApp = express();
@@ -89,18 +89,6 @@ const setupAdmin = (appContext) => {
     routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
 
     const router = express.Router();
-
-    router.post("/stop", (req, res) => {
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("stop\n");
-                res.sendStatus(200);
-            } else {
-                console.log("Rejected unauthorized request to stop server");
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
 
     router.post("/trigger-manual-backup", (req, res) => {
         setTimeout(() => {
@@ -145,7 +133,8 @@ const setupAdmin = (appContext) => {
     });
 
     router.post("/trigger-restore-backup", async (req, res) => {
-        const { body } = req;
+        const { body, appContext } = req;
+        const { rl } = appContext;
         // const { adminCodeHash } = { body };
         setTimeout(async () => {
             if (clientHashIsValid(req.header("Authorization"))) {

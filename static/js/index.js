@@ -163,7 +163,7 @@ function stopServer() {
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/stop", true);
+            xhr.open("POST", "/v1/stop", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
