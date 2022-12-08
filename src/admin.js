@@ -38,17 +38,7 @@ const setupAdmin = (appContext) => {
     });
     appContext.getConsoleLogBuffer = () => consoleLogBuffer;
     appContext.refreshSalt = refreshSalt;
-
-    const { rl, bs } = appContext;
-    
-    if (!(uiConfig || {}).enabled) {
-        console.log("Running server without UI");
-        return {rl};
-    }
-
-    console.log("Starting express server");
-    
-    function clientHashIsValid(clientHashWithSalt) {
+    appContext.clientHashIsValid = (clientHashWithSalt) => {
         return (
             (clientHashWithSalt || "").toUpperCase() ===
             crypto
@@ -62,6 +52,14 @@ const setupAdmin = (appContext) => {
         );
     }
 
+    if (!(uiConfig || {}).enabled) {
+        console.log("Running server without UI");
+        return appContext;
+    }
+
+    const { rl, bs, clientHashIsValid } = appContext;
+    
+    console.log("Starting express server");
     const expressApp = express();
 
     expressApp.use((req, res, next) => {
@@ -91,15 +89,6 @@ const setupAdmin = (appContext) => {
     routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
 
     const router = express.Router();
-
-    router.get("/salt", (req, res) => {
-        // refresh salt anytime anyone asks for it
-        res.send(refreshSalt());
-    });
-
-    router.get("/is-auth-valid", (req, res) => {
-        res.send(clientHashIsValid(req.header("Authorization")));
-    });
 
     router.post("/stop", (req, res) => {
         setTimeout(() => {

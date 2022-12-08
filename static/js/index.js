@@ -83,7 +83,7 @@ function attemptLogin() {
             );
             updateCurrentAdminCodeHash();
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/is-auth-valid", true);
+            xhr.open("GET", "/v1/is-auth-valid", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader("Authorization", hexToken);
             xhr.send(JSON.stringify({}));
