@@ -40,15 +40,24 @@ const {
 } = require("./src/backup.js");
 
 const { setupAdmin } = require("./src/admin.js");
+const config = require('./src/config.js');
+
+const appContext = {
+    fs,
+    bs: null,
+    rl: null,
+    backupConfig: config.backup,
+    isCurrentlyBackingUp: false,
+    hasSentStopCommand: false,
+    currentBackupType: null,
+    saveQueryInterval: null,
+    saveHoldInterval: null,
+    requestStopServer: null
+};
 
 fs.ensureDirSync(UNZIPPED_SERVERS_CONTAINER);
 
-const config = require('./src/config.js');
-
-const backupConfig = config.backup;
-assert(backupConfig, `Could not find field 'backup' at root of config`);
-
-const backupFrequencyMS = backupConfig["backup-frequency-minutes"] * MS_IN_MIN;
+const backupFrequencyMS = appContext.backupConfig["backup-frequency-minutes"] * MS_IN_MIN;
 const minBackupFrequencyMinutes = 10;
 
 assert(backupFrequencyMS > MS_IN_MIN * minBackupFrequencyMinutes,
@@ -57,10 +66,6 @@ assert(backupFrequencyMS > MS_IN_MIN * minBackupFrequencyMinutes,
 assert(platform === "linux" || platform === 'win32',
     'Unsupported platform - must be Windows 10 or Ubuntu 18+ based');
 
-
-let isCurrentlyBackingUp = false;
-let hasSentStopCommand = false;
-let currentBackupType = null;
 
 console.log = newlog;
 // We might need to pass this to spawnServer
@@ -85,22 +90,28 @@ createServerProperties().then(async () => {
     console.log(`Starting Minecraft Bedrock server in ${process.env.ENVIRONMENT} mode...`);
     console.log(`Path: ${UNZIPPED_SERVER_FOLDER_PATH}/bedrock_server`)
     
-    const { bs, requestStopServer } = startGameServer({ saveQueryInterval, saveHoldInterval });
-    let { rl } = setupAdmin(bs);
+    const gameServerArtifacts = startGameServer(appContext);
+    const { bs, requestStopServer } = gameServerArtifacts;
+    appContext.bs = bs;
+    appContext.requestStopServer = requestStopServer;
+
+    let { rl } = await setupAdmin(appContext);
 
     let lastQueryWasSaveSucccessful = false;
 
     saveQueryInterval = setInterval(() => {
+        const { isCurrentlyBackingUp } = appContext;
         if (!isCurrentlyBackingUp && bs) {
             bs.stdin.write("save query\r\n");
         }
     }, SAVE_QUERY_FREQUENCY);
 
     const triggerBackup = backupType => {
+        let { isCurrentlyBackingUp, hasSentStopCommand } = appContext;
         if (!hasSentStopCommand && !isCurrentlyBackingUp) {
             // don't backup if hasSentStopCommand is true
             console.log(`Telling server to prepare for backup...`);
-            currentBackupType = backupType;
+            appContext.currentBackupType = backupType;
             bs.stdin.write("save hold\r\n");
         }
     };

@@ -26,16 +26,19 @@ const refreshSalt = () => {
 
 const uiConfig = config.ui;
 
-const setupAdmin = (bs) => {
+const setupAdmin = (appContext) => {
     const routePath="/routes/**/*.js"; 
     const gitTag = git.tag();
     const gitBranch = git.branch();
 
-    const rl = readline.createInterface({
+    appContext.rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         terminal: false
     });
+    appContext.getConsoleLogBuffer = () => consoleLogBuffer;
+
+    const { rl, bs } = appContext;
     
     if (!(uiConfig || {}).enabled) {
         console.log("Running server without UI");
@@ -60,6 +63,10 @@ const setupAdmin = (bs) => {
 
     const expressApp = express();
 
+    expressApp.use((req, res, next) => {
+        req.appContext = appContext;
+        next();
+    });
     expressApp.use(express.json());
     expressApp.use((req, res, next) => {
         res.append('git-tag', gitTag);
@@ -88,6 +95,7 @@ const setupAdmin = (bs) => {
     const router = express.Router();
     
     router.get("/terminal-out", (req, res) => {
+        const consoleLogBuffer = req.appContext.getConsoleLogBuffer();
         res.send(
             [`${MAX_STORED_LINES} latest lines of terminal output:`]
             .concat(consoleLogBuffer)
@@ -242,7 +250,8 @@ const setupAdmin = (bs) => {
 
     console.log(`Running UI for server on port ${uiConfig.port}`);
 
-    return { rl };
+    appContext.finishedSettingUpAdmin = true;
+    return appContext;
 }
 
 module.exports = {
