@@ -75,7 +75,7 @@ function enableInteraction() {
 }
 
 function attemptLogin() {
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const hexToken = sjcl.codec.hex.fromBits(
@@ -159,7 +159,7 @@ document.getElementById("refresh-rate").addEventListener("change", setRefreshRat
 
 function stopServer() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
@@ -183,7 +183,7 @@ function stopServer() {
 
 function triggerManualBackup() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
@@ -206,7 +206,7 @@ function triggerManualBackup() {
 
 function triggerPrintResourceUsage() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
@@ -230,7 +230,7 @@ function triggerPrintResourceUsage() {
 
 function triggerPrintPlayerList() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
@@ -254,7 +254,7 @@ function triggerPrintPlayerList() {
 
 function triggerRestoreBackup() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
@@ -292,7 +292,7 @@ function getBackupDescriptionString(backup) {
 
 function refreshBackupList() {
     setSelectedBackup(null);
-    fetch("/salt")
+    fetch("/v1/salt")
     .then(response => response.text())
     .then(salt => {
         const hexToken = sjcl.codec.hex.fromBits(

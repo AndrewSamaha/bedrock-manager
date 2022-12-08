@@ -37,6 +37,7 @@ const setupAdmin = (appContext) => {
         terminal: false
     });
     appContext.getConsoleLogBuffer = () => consoleLogBuffer;
+    appContext.refreshSalt = refreshSalt;
 
     const { rl, bs } = appContext;
     
@@ -79,14 +80,11 @@ const setupAdmin = (appContext) => {
 
     // Assign auth pre-handler for relevant routes
     routes.forEach(({path, requiresAuth}) => requiresAuth && expressApp.use(path, (req, res, next) => {
-        console.log(`Request for ${path} - header.Authorization: ${req.header("Authorization")}`)
         if (!clientHashIsValid(req.header("Authorization"))) {
             res.sendStatus(401);
             return;
-        } else {
-            console.log(`Request for ${path} authorized`);
-            next();
         }
+        next();
     }));
     
     // Assign pre-hooks for each route
