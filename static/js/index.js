@@ -103,7 +103,7 @@ function attemptLogin() {
 }
 
 function refreshTerminalOutput() {
-    fetch("/terminal-out")
+    fetch("/v1/terminal-out")
         .then(response => response.text())
         .then(text => {
             document.getElementById("server-terminal-output").innerHTML = text;
