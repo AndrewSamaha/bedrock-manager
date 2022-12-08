@@ -1,3 +1,4 @@
+const { getBackupSizeList } = require("../../backup.js");
 const { getPath } = require('../../helpers/routes.js');
 const { MAX_STORED_LINES } = require("../../utils.js");
 

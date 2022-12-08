@@ -113,7 +113,7 @@ function refreshTerminalOutput() {
 }
 
 function refreshServerResourceUsageInfo() {
-    fetch("/resource-usage")
+    fetch("/v1/resource-usage")
         .then(response => response.json())
         .then(stats => {
             const statsText = [];

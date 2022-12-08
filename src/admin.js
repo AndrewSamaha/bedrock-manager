@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const express = require("express");
 const fs = require('fs-extra');
 const readline = require("readline");
-const pidusage = require("pidusage");
+
 const git = require('git-rev-sync');
 const { glob } = require('glob');
 const flatten = require('lodash/flatten');
@@ -93,33 +93,6 @@ const setupAdmin = (appContext) => {
     routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
 
     const router = express.Router();
-    
-    router.get("/terminal-out", (req, res) => {
-        const consoleLogBuffer = req.appContext.getConsoleLogBuffer();
-        res.send(
-            [`${MAX_STORED_LINES} latest lines of terminal output:`]
-            .concat(consoleLogBuffer)
-            .join("<br>")
-        );
-    });
-
-    router.get("/resource-usage", (req, res) => {
-        if (bs != null) {
-            pidusage(bs.pid, (err, stats) => {
-                let result = {};
-                if (stats != null) {
-                    result = {
-                        cpu: stats.cpu,
-                        elapsed: stats.elapsed,
-                        memory: stats.memory
-                    };
-                }
-                res.send(result);
-            });
-        } else {
-            res.send({});
-        }
-    });
 
     router.get("/salt", (req, res) => {
         // refresh salt anytime anyone asks for it
