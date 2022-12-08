@@ -3,12 +3,15 @@ const crypto = require("crypto");
 const express = require("express");
 const fs = require('fs-extra');
 const readline = require("readline");
-const pidusage = require("pidusage");
+
 const git = require('git-rev-sync');
+const { glob } = require('glob');
+const flatten = require('lodash/flatten');
 
 const config = require('./config.js');
 const { newlog, MAX_STORED_LINES, consoleLogBuffer, UI_COMMAND_DELAY } = require("./utils.js");
 const { getBackupList, getBackupSizeList } = require("./backup.js");
+
 
 console.log = newlog;
 
@@ -23,25 +26,19 @@ const refreshSalt = () => {
 
 const uiConfig = config.ui;
 
-const setupAdmin = (bs) => {
-
+const setupAdmin = (appContext) => {
+    const routePath="/routes/**/*.js"; 
     const gitTag = git.tag();
     const gitBranch = git.branch();
-
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         terminal: false
     });
-    
-    if (!(uiConfig || {}).enabled) {
-        console.log("Running server without UI");
-        return {rl};
-    }
-
-    console.log("Starting express server");
-    
-    function clientHashIsValid(clientHashWithSalt) {
+    appContext.rl = rl;
+    appContext.getConsoleLogBuffer = () => consoleLogBuffer;
+    appContext.refreshSalt = refreshSalt;
+    appContext.clientHashIsValid = (clientHashWithSalt) => {
         return (
             (clientHashWithSalt || "").toUpperCase() ===
             crypto
@@ -55,8 +52,20 @@ const setupAdmin = (bs) => {
         );
     }
 
+    if (!(uiConfig || {}).enabled) {
+        console.log("Running server without UI");
+        return appContext;
+    }
+
+    const { bs, clientHashIsValid } = appContext;
+    
+    console.log("Starting express server");
     const expressApp = express();
-    const router = express.Router();
+
+    expressApp.use((req, res, next) => {
+        req.appContext = appContext;
+        next();
+    });
     expressApp.use(express.json());
     expressApp.use((req, res, next) => {
         res.append('git-tag', gitTag);
@@ -64,122 +73,23 @@ const setupAdmin = (bs) => {
         next();
     });
 
-    router.get("/terminal-out", (req, res) => {
-        res.send(
-            [`${MAX_STORED_LINES} latest lines of terminal output:`]
-            .concat(consoleLogBuffer)
-            .join("<br>")
-        );
-    });
+    // Read routes from files
+    const routes = flatten(glob.sync(__dirname + routePath).map((file) => require(file)));
 
-    router.get("/resource-usage", (req, res) => {
-        if (bs != null) {
-            pidusage(bs.pid, (err, stats) => {
-                let result = {};
-                if (stats != null) {
-                    result = {
-                        cpu: stats.cpu,
-                        elapsed: stats.elapsed,
-                        memory: stats.memory
-                    };
-                }
-                res.send(result);
-            });
-        } else {
-            res.send({});
+    // Assign auth pre-handler for relevant routes
+    routes.forEach(({path, requiresAuth}) => requiresAuth && expressApp.use(path, (req, res, next) => {
+        if (!clientHashIsValid(req.header("Authorization"))) {
+            console.log(`Rejected unauthorized request to ${path}`);
+            res.sendStatus(401);
+            return;
         }
-    });
+        next();
+    }));
+    
+    // Assign pre-hooks for each route
+    routes.forEach(({path, preHandler}) => preHandler && expressApp.use(path, preHandler));
 
-    router.get("/salt", (req, res) => {
-        // refresh salt anytime anyone asks for it
-        res.send(refreshSalt());
-    });
-
-    router.get("/is-auth-valid", (req, res) => {
-        res.send(clientHashIsValid(req.header("Authorization")));
-    });
-
-    router.post("/stop", (req, res) => {
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("stop\n");
-                res.sendStatus(200);
-            } else {
-                console.log("Rejected unauthorized request to stop server");
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.post("/trigger-manual-backup", (req, res) => {
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("backup\n");
-                res.sendStatus(200);
-            } else {
-                console.log(
-                    "Rejected unauthorized request to trigger manual backup"
-                );
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.post("/trigger-print-resource-usage", (req, res) => {
-        const { body } = req;
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("resource-usage\n");
-                res.sendStatus(200);
-            } else {
-                console.log("Rejected unauthorized request to print resource usage");
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.post("/trigger-print-player-list", (req, res) => {
-        const { body } = req;
-        setTimeout(() => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                rl.write("list\n");
-                res.sendStatus(200);
-            } else {
-                console.log(
-                    "Rejected unauthorized request to print resource usage"
-                );
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.post("/trigger-restore-backup", async (req, res) => {
-        const { body } = req;
-        // const { adminCodeHash } = { body };
-        setTimeout(async () => {
-            if (clientHashIsValid(req.header("Authorization"))) {
-                const backup = body.backup;
-                const backups = await getBackupList();
-                if (backups.includes(backup)) {
-                    // do this check to avoid weird injection errors
-                    rl.write(`force-restore ${body.backup}\n`);
-                } else {
-                    console.log(`Backup ${body.backup} not found`);
-                }
-                res.sendStatus(200);
-            } else {
-                console.log(
-                    `Rejected unauthorized request to restore backup ${body.backup}`
-                );
-                res.sendStatus(401);
-            }
-        }, UI_COMMAND_DELAY);
-    });
-
-    router.get("/backup-size-list", async (req, res) => {
-        const backups = await getBackupSizeList();
-        res.send(backups);
-    });
+    const router = express.Router();
 
     router.get("/list-available-mods", async (req, res) => {
         const bpPath = `${process.env.MOD_IMPORT_PATH}/development_behavior_packs`;
@@ -214,14 +124,18 @@ const setupAdmin = (bs) => {
         // });
     
     });
-    
+
+    // Assign routes from files
+    routes.forEach(({path, verb, routeHandler}) => routeHandler && router[verb](path, routeHandler));
+
     expressApp.use("/", router);
     expressApp.use(express.static("static"));
     expressApp.listen(uiConfig.port);
 
     console.log(`Running UI for server on port ${uiConfig.port}`);
 
-    return { rl };
+    appContext.finishedSettingUpAdmin = true;
+    return appContext;
 }
 
 module.exports = {

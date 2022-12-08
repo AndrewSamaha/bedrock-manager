@@ -75,24 +75,20 @@ function enableInteraction() {
 }
 
 function attemptLogin() {
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
+            const hexToken = sjcl.codec.hex.fromBits(
+                sjcl.hash.sha256.hash(inputAdminCodeHash + salt.toUpperCase())
+            );
             updateCurrentAdminCodeHash();
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/is-auth-valid", true);
+            xhr.open("GET", "/v1/is-auth-valid", true);
             xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.setRequestHeader(
-                "Authorization",
-                sjcl.codec.hex.fromBits(
-                    sjcl.hash.sha256.hash(
-                        inputAdminCodeHash + salt.toUpperCase()
-                    )
-                )
-            );
+            xhr.setRequestHeader("Authorization", hexToken);
             xhr.send(JSON.stringify({}));
-            xhr.onload = (res) => {
-                if (xhr.response === 'true') {
+            xhr.onload = ({isTrusted}) => {
+                if (isTrusted === true) {
                     document.getElementById('login-content').hidden = true;
                     document.getElementById('post-login-content').hidden = false;
                     document.getElementById("bedrockManagerBranch").innerHTML = xhr.getResponseHeader('git-branch');
@@ -107,7 +103,7 @@ function attemptLogin() {
 }
 
 function refreshTerminalOutput() {
-    fetch("/terminal-out")
+    fetch("/v1/terminal-out")
         .then(response => response.text())
         .then(text => {
             document.getElementById("server-terminal-output").innerHTML = text;
@@ -117,7 +113,7 @@ function refreshTerminalOutput() {
 }
 
 function refreshServerResourceUsageInfo() {
-    fetch("/resource-usage")
+    fetch("/v1/resource-usage")
         .then(response => response.json())
         .then(stats => {
             const statsText = [];
@@ -163,11 +159,11 @@ document.getElementById("refresh-rate").addEventListener("change", setRefreshRat
 
 function stopServer() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/stop", true);
+            xhr.open("POST", "/v1/stop", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -187,11 +183,11 @@ function stopServer() {
 
 function triggerManualBackup() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-manual-backup", true);
+            xhr.open("POST", "/v1/trigger-manual-backup", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -210,11 +206,11 @@ function triggerManualBackup() {
 
 function triggerPrintResourceUsage() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-print-resource-usage", true);
+            xhr.open("POST", "/v1/trigger-print-resource-usage", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -234,11 +230,11 @@ function triggerPrintResourceUsage() {
 
 function triggerPrintPlayerList() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-print-player-list", true);
+            xhr.open("POST", "/v1/trigger-print-player-list", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -258,11 +254,11 @@ function triggerPrintPlayerList() {
 
 function triggerRestoreBackup() {
     disableInteraction();
-    fetch("/salt")
+    fetch("/v1/salt")
         .then(response => response.text())
         .then(salt => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/trigger-restore-backup", true);
+            xhr.open("POST", "/v1/trigger-restore-backup", true);
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader(
                 "Authorization",
@@ -296,24 +292,41 @@ function getBackupDescriptionString(backup) {
 
 function refreshBackupList() {
     setSelectedBackup(null);
-    fetch("/backup-size-list")
-        .then(response => response.json())
-        .then(backups => {
-            const dropdownOptions = document.getElementById(
-                "restore-backup-options"
-            );
-            dropdownOptions.innerHTML = "";
-            backups.forEach(backup => {
-                const option = document.createElement("a");
-                option.className = "dropdown-item " + getClassForBackup(backup.name);
-                option.textContent = backup.name + getBackupDescriptionString(backup);
-                option.value = backup.name;
-                option.addEventListener("click", () =>
-                    setSelectedBackup(backup)
+    fetch("/v1/salt")
+    .then(response => response.text())
+    .then(salt => {
+        const hexToken = sjcl.codec.hex.fromBits(
+            sjcl.hash.sha256.hash(inputAdminCodeHash + salt.toUpperCase())
+        );
+        updateCurrentAdminCodeHash();
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "/v1/backup-size-list", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization", hexToken);
+        xhr.send(JSON.stringify({}));
+        xhr.onload = (res) => {
+            const { isTrusted } = res;
+            const backups = JSON.parse(xhr.response)
+            if (isTrusted === true) {
+                const dropdownOptions = document.getElementById(
+                    "restore-backup-options"
                 );
-                dropdownOptions.appendChild(option);
-            });
-        });
+                dropdownOptions.innerHTML = "";
+                backups.forEach(backup => {
+                    const option = document.createElement("a");
+                    option.className = "dropdown-item " + getClassForBackup(backup.name);
+                    option.textContent = backup.name + getBackupDescriptionString(backup);
+                    option.value = backup.name;
+                    option.addEventListener("click", () =>
+                        setSelectedBackup(backup)
+                    );
+                    dropdownOptions.appendChild(option);
+                });
+            } else {
+                alert('Incorrect admin code');
+            }
+        };
+    });
 }
 
 function setSelectedBackup(backup) {

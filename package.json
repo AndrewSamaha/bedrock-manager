@@ -4,8 +4,10 @@
   "description": "Easy to use Minecraft Bedrock Server with automatic cloud backups",
   "main": "index.js",
   "scripts": {
+    "prepare": "husky install",
+    "version": "auto-changelog -p && git add CHANGELOG.md",
     "start": "node index.js",
-    "develop": "nodemon index.js"
+    "commit": "git cz"
   },
   "repository": {
     "type": "git",
@@ -18,7 +20,11 @@
   },
   "homepage": "https://github.com/AndrewSamaha/bedrock-manager#readme",
   "dependencies": {
+    "@commitlint/cli": "^17.3.0",
+    "@commitlint/config-conventional": "^17.3.0",
+    "@commitlint/cz-commitlint": "^17.3.0",
     "archiver": "^3.1.1",
+    "auto-changelog": "^2.4.0",
     "aws-sdk": "^2.656.0",
     "cross-spawn": "^7.0.2",
     "dotenv": "^16.0.3",
@@ -26,8 +32,23 @@
     "express": "^4.16.3",
     "fs-extra": "^9.0.0",
     "git-rev-sync": "^3.0.2",
+    "glob": "^8.0.3",
+    "husky": "^8.0.2",
     "lodash": "^4.17.21",
     "pidusage": "^2.0.21",
     "unzipper": "^0.10.10"
+  },
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "@commitlint/cz-commitlint"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
+    }
   }
 }
