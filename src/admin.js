@@ -91,40 +91,6 @@ const setupAdmin = (appContext) => {
 
     const router = express.Router();
 
-    router.get("/list-available-mods", async (req, res) => {
-        const bpPath = `${process.env.MOD_IMPORT_PATH}/development_behavior_packs`;
-        const rpPath = `${process.env.MOD_IMPORT_PATH}/development_resource_packs`;
-        
-        const behaviorPacks = fs.readdirSync(bpPath);
-        const resourcePacks = fs.readdirSync(rpPath);
-        let ret = 'Behavior Packs: <br />\r\n';
-        ret = behaviorPacks.reduce((acc, cur) => {
-                return `${acc}${cur}<br />\r\n`
-        }, ret);
-        ret += '<br />Resource Packs: <br />\r\n';
-        ret = resourcePacks.reduce((acc, cur) => {
-            return `${acc}${cur}<br />\r\n`
-        }, ret);
-        console.log(ret)
-        res.send(ret)
-        return;
-    
-        // exec(`(cd ${process.env.SERVER_EXECUTABLE_PATH} && ls -la ./lenovo/development*/)`, (err, so, se) => {
-        //     if (err) {
-        //         console.log('exec error: ', err)
-        //         return
-        //     }
-        //     const lines = so.split(/\r?\n/);
-        //     const ret = lines.reduce((acc, cur) => {
-        //         return `${acc}${cur}<br />\r\n`
-        //     }, '');
-        //     console.log('stdout:', ret);
-        //     console.error('stderr:', se);
-        //     res.send(ret)
-        // });
-    
-    });
-
     // Assign routes from files
     routes.forEach(({path, verb, routeHandler}) => routeHandler && router[verb](path, routeHandler));
 
