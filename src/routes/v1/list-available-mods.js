@@ -1,44 +1,83 @@
 const e = require('express');
 const fs = require('fs-extra');
+const flatten = require('lodash/flatten');
+const { formatDistance, formatDistanceToNow } = require('date-fns');
+
 const { getPath } = require('../../helpers/routes.js');
 const path = getPath(__filename);
 
-const getFileList = (path) => {
-    return fs.readdirSync(path).map((file) => ({
-        file,
-        modified: fs.statSync(`${path}/${file}`).mtime.getTime()
-    }));
+const comparePaths = (sourcePath, destPath, type) => {
+    const ignore = ['.gitignore'];
+    const options = { addSuffix: false, includeSeconds: true };
+
+    let fileDict = { ...fs.readdirSync(sourcePath).map((filename) => {
+        if (ignore.includes(filename)) return null;
+        const sourceFullPath = `${sourcePath}/${filename}`;
+        return {
+            [sourceFullPath]: {
+                type,
+                filename, 
+                sourcePath,
+                sourceMTime: fs.statSync(sourceFullPath).mtime.getTime(),
+                sourceFullPath,
+                destPath
+            }
+        };
+    }).reduce((acc, cur) => {
+        if (!cur) return acc;
+        return { ...acc, ...cur }
+    }, {})}
+    
+    fileDict = { ...fs.readdirSync(destPath).map((filename) => {
+        const sourceFullPath = `${sourcePath}/${filename}`;
+        const destFullPath = `${destPath}/${filename}`;
+        if (!fileDict[sourceFullPath]) return null;
+        return {
+            [sourceFullPath]: {
+                ...fileDict[sourceFullPath],
+                destPath,
+                destMTime: fs.statSync(destFullPath).mtime.getTime(),
+                destFullPath
+            }
+        }
+    }).reduce((acc, cur) => {
+        if (!cur) return acc;
+        return { ...acc, ...cur }
+    }, fileDict)};
+    
+    const files = Object.entries(fileDict).map(([fullSourcePath, fileObj]) => {
+        const { sourceMTime, destMTime } = fileObj;
+        if (!destMTime) return {
+            ...fileObj,
+            diff: null,
+            diffStr: 'mod not found on server',
+            updatable: true
+        }
+        const diff = sourceMTime - destMTime;
+        const diffStr = (() => {
+            if (diff > 0) return `a newer version has been available for ${formatDistanceToNow(new Date(sourceMTime), options)}`;
+            if (diff < 0) return `the game-server is using files ${formatDistance(new Date(sourceMTime), new Date(destMTime), options)} newer`;
+            return `files are in-sync`;
+        })();
+        return {
+            ...fileObj,
+            diff,
+            diffStr,
+            updatable: diff > 0 ? true : false
+        };
+    });
+
+    return files;
 }
 
-const comparePaths = (sourcePath, destPath, ignoreThingsNotInSource = true) => {
-    let comp = {};
-    fs.readdirSync(sourcePath).forEach((file) => {
-        comp[file] = {};
-        comp[file].modified1 = fs.statSync(`${sourcePath}/${file}`).mtime.getTime();
-    });
-    fs.readdirSync(destPath).forEach((file) => {
-        if (!comp.hasOwnProperty(file)) {
-            if (ignoreThingsNotInSource)
-                return;
-            
-            comp[file] = {};
-        }
-        comp[file].modified2 = fs.statSync(`${destPath}/${file}`).mtime.getTime();
-    });
-    Object.entries(comp).forEach(([file, c]) => {
-        const { modified1, modified2 } = c;
-        if (modified1 && modified2) {
-            c.diff = modified1 - modified2;
-        }
-    })
-    return comp;
-}
+const createPath = (type) => ({
+    type,
+    source: `${process.env.MOD_IMPORT_PATH}/development_${type}`,
+    dest:   `${process.env.ENVIRONMENT === 'PRODUCTION' ?
+                process.env.PRODUCTION_SERVER_PATH : 
+                process.env.STAGING_SERVER_PATH}/${type}`
+})
 
-const fileListToString = (filelist, title='') => {
-    return filelist.reduce((acc, cur) => {
-        return `${acc}${JSON.stringify(cur, null, '\t')}<br />\r\n`
-    }, title);
-}
 module.exports = [
     {
         verb: 'get',
@@ -48,20 +87,16 @@ module.exports = [
             const { body, appContext } = req;
             const { backup } = body;
 
-            const bpPath = `${process.env.MOD_IMPORT_PATH}/development_behavior_packs`;
-            const rpPath = `${process.env.MOD_IMPORT_PATH}/development_resource_packs`;
-            const destBpPath = `${process.env.ENVIRONMENT === 'PRODUCTION' ?
-                process.env.PRODUCTION_SERVER_PATH : process.env.STAGING_SERVER_PATH}/behavior_packs`;
-            const destRpPath = `${process.env.ENVIRONMENT === 'PRODUCTION' ?
-                process.env.PRODUCTION_SERVER_PATH : process.env.STAGING_SERVER_PATH}/behavior_packs`
+            const files = flatten([
+                createPath('behavior_packs'),
+                createPath('resource_packs')
+            ].map(({source, dest, type}) => comparePaths(source, dest, type)))
 
-            const bpComparison = comparePaths(bpPath, destBpPath)
-            const rpComparison = comparePaths(rpPath, destRpPath);
-            let ret = 'Behavior Packs: <br />\r\n';
-            ret = `${ret}${JSON.stringify(bpComparison, null, '\t')}<br />\r\n`
+            const updatableMods = files.filter(({updatable}) => updatable)
             
-            ret += '<br />Resource Packs: <br />\r\n';
-            ret = `${ret}${JSON.stringify(rpComparison, null, '\t')}<br />\r\n`
+            const ret = `${JSON.stringify(updatableMods, null, '\t')}<br />\r\n${updatableMods.length} / ${files.length}\r\n`;
+
+            console.log('finished result:')
             console.log(ret)
             res.send(ret)
         }
