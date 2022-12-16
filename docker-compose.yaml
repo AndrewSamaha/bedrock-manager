@@ -1,0 +1,34 @@
+version: '3.4'
+
+services:
+  bedrock-manager-staging:
+    build: .
+    container_name: bedrock-manager-staging
+    ports:
+      - 80:80
+      - 19132:19132
+      - 19133:19133
+      - 19232:19232
+      - 19233:19233
+    dns:
+      - 8.8.8.8
+    volumes:
+      - /home/andrew/Minecraft/staging/game-server:/game-server
+      - /home/andrew/Minecraft/staging/world-backups:/bedrock-manager/backups
+    networks:
+      bedrock-manager-net:
+        ipv4_address: 192.168.0.10
+
+networks:
+  bedrock-manager-net:
+    name: bedrock-manager-net
+    driver: macvlan
+    driver_opts:
+      parent: enp3s0
+      macvlan_mode: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.0.0/24"
+          gateway: "192.168.0.1"
+          ip_range: "192.168.0.0/28"

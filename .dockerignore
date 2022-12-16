@@ -1,0 +1,5 @@
+node_modules
+backups
+.github
+.husky
+bedrock_server_how_to.html
