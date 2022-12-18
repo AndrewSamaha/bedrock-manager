@@ -1,23 +1,21 @@
 version: '3.4'
 
 services:
-  bedrock-manager-staging:
+  bedrock-manager:
     build: .
-    container_name: bedrock-manager-staging
+    container_name: ${CONTAINER_NAME}
     ports:
       - 80:80
-      - 19132:19132
-      - 19133:19133
-      - 19232:19232
-      - 19233:19233
+      - ${GAME_SERVER_PORT}:${GAME_SERVER_PORT}
+      - ${GAME_SERVER_PORTV6}:${GAME_SERVER_PORTV6}
     dns:
-      - 8.8.8.8
+      - ${CONTAINER_DNS_SERVER}
     volumes:
-      - /home/andrew/Minecraft/staging/game-server:/game-server
-      - /home/andrew/Minecraft/staging/world-backups:/bedrock-manager/backups
+      - ${HOST_PATH}/game-server:/game-server
+      - ${HOST_PATH}/world-backups:/bedrock-manager/backups
     networks:
       bedrock-manager-net:
-        ipv4_address: 192.168.0.10
+        ipv4_address: ${CONTAINER_IP}
 
 networks:
   bedrock-manager-net:
