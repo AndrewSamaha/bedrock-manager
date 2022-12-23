@@ -3,7 +3,7 @@ require('dotenv').config()
 
 const UNZIPPED_SERVER_FOLDER_NAME = `bedrock-server`;
 const UNZIPPED_SERVERS_CONTAINER = './servers'
-const SERVER_ROOT_FOLDER = process.env.ENVIRONMENT === 'PRODUCTION' ? `${process.env.PRODUCTION_SERVER_PATH}` : `${process.env.STAGING_SERVER_PATH}`;
+const SERVER_ROOT_FOLDER = process.env.GAME_SERVER_PATH;
 const UNZIPPED_SERVER_FOLDER_PATH = SERVER_ROOT_FOLDER;
 const ZIPPED_SERVER_PATH = `${UNZIPPED_SERVER_FOLDER_PATH}.zip`;
 const SERVER_EXECUTABLE_PATH = `${SERVER_ROOT_FOLDER}/bedrock_server`;

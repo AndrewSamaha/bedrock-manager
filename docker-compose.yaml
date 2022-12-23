@@ -1,0 +1,40 @@
+version: '3.4'
+
+
+services:
+  bedrock-manager:
+    build:
+      context: .
+      args:
+        CONTAINER_DNS_SERVER: ${CONTAINER_DNS_SERVER}
+        HOST_NETWORK_DEVICE: ${HOST_NETWORK_DEVICE}
+        UI_PORT: ${UI_PORT}
+        GAME_SERVER_PORT: ${GAME_SERVER_PORT}
+        GAME_SERVER_PORTV6: ${GAME_SERVER_PORTV6}
+    container_name: ${CONTAINER_NAME}
+    ports:
+      - ${UI_PORT}:${UI_PORT}
+      - ${GAME_SERVER_PORT}:${GAME_SERVER_PORT}
+      - ${GAME_SERVER_PORTV6}:${GAME_SERVER_PORTV6}
+    dns:
+      - ${CONTAINER_DNS_SERVER}
+    volumes:
+      - ${HOST_PATH}/game-server:/game-server
+      - ${HOST_PATH}/world-backups:/bedrock-manager/backups
+    networks:
+      bedrock-manager-net:
+        ipv4_address: ${CONTAINER_IP}
+
+networks:
+  bedrock-manager-net:
+    name: bedrock-manager-net
+    driver: macvlan
+    driver_opts:
+      parent: ${HOST_NETWORK_DEVICE}
+      macvlan_mode: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.0.0/24"
+          gateway: "192.168.0.1"
+          ip_range: "192.168.0.0/28"
